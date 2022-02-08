@@ -1,0 +1,12 @@
+/zig-out/
+/zig-cache/
+/.idea/
+build.zig
+md2dc.orig
+*.class
+md2dc2zig.zig
+md2dja.iml
+md2d.c.orig
+md2dc
+md2dz
+mc2d.zig
