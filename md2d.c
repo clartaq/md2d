@@ -349,160 +349,6 @@ void initialize_particles() {
   remove_drift();
 }
 
-/*
- * Initialize the simulation by placing the particles in their initial
- * positions and giving them normally distributed velocities consistent
- * with the target temperature.
- */
-/* void initialize() { */
-/*   // Initialize some globals. */
-/*   t = 0.0; */
-/*   dt = STEP_SIZE; */
-/*   dt_over_2 = dt * 0.5; */
-/*   dt_squared_over_2 = dt_over_2 *dt; */
-/*   step = 0; */
-
-/*   place_particles(); */
-
-/*   // Normally distribute initial velocities. */
-/*   double x_velocity_sum = 0.0; */
-/*   double y_velocity_sum = 0.0; */
-/*   for (int p = 0; p < NUM_PARTICLES; p++) { */
-/*     vx[p] = gaussian_deviate_marsaglia(); */
-/*     x_velocity_sum += vx[p]; */
-/*     vy[p] = gaussian_deviate_marsaglia(); */
-/*     y_velocity_sum += vy[p]; */
-/*   } */
-
-/*   // Zero-out any momentum. */
-/*   for (int p = 0; p < NUM_PARTICLES; p++) { */
-/*     vx[p] -= x_velocity_sum / NUM_PARTICLES; */
-/*     vy[p] -= y_velocity_sum / NUM_PARTICLES; */
-/*   } */
-
-/*   // Rescale to target temperature. */
-/*   rescale_velocities(); */
-/* } */
-
-/**
- * Check for collisions with walls and include gravity, if any.
- */
-/* void checkWalls() { */
-/*   wall_force = 0.0; */
-
-/*   for (int i = 0; i < NUM_PARTICLES; i++) { */
-
-/*     // First compute the x component. */
-/*     if (x[i] < 0.5) { */
-/*       ax[i] = WALL_STIFFNESS * (0.5 - x[i]); */
-/*       wall_force += ax[i]; */
-/*       temp_potential_energy += 0.5 * WALL_STIFFNESS */
-/*         * (0.5 - x[i]) * (0.5 - x[i]); */
-/*     } else if (x[i] > BOX_SIZE_MINUS_HALF) { */
-/*       ax[i] = WALL_STIFFNESS * (BOX_SIZE_MINUS_HALF - x[i]); */
-/*       wall_force -= ax[i]; */
-/*       temp_potential_energy += 0.5 * WALL_STIFFNESS */
-/*         * (BOX_SIZE_MINUS_HALF - x[i]) */
-/*         * (BOX_SIZE_MINUS_HALF - x[i]); */
-/*     } else { */
-/*       ax[i] = 0.0; */
-/*     } */
-
-/*     // Now the y component. */
-/*     if (y[i] < 0.5) { */
-/*       ay[i] = (WALL_STIFFNESS * (0.5 - y[i])); */
-/*       wall_force += ay[i]; */
-/*       temp_potential_energy += 0.5 * WALL_STIFFNESS */
-/*         * (0.5 - y[i]) * (0.5 - y[i]); */
-/*     } else if (y[i] > BOX_SIZE_MINUS_HALF) { */
-/*       ay[i] = (WALL_STIFFNESS * (BOX_SIZE_MINUS_HALF - y[i])); */
-/*       wall_force -= ay[i]; */
-/*       temp_potential_energy += 0.5 * WALL_STIFFNESS */
-/*         * (BOX_SIZE_MINUS_HALF - y[i]) */
-/*         * (BOX_SIZE_MINUS_HALF - y[i]); */
-/*     } else { */
-/*       ay[i] = 0.0; */
-/*     } */
-/*   } */
-/*   instant_pressure = wall_force / (4 * BOX_WIDTH); */
-/* } */
-
-
-/* void compute_accelerations() { */
-/*   double dx; */
-/*   double dy;  // separations in x and y directions */
-/*   double dx2; */
-/*   double dy2; */
-/*   double rSquared; */
-/*   double rSquaredInv; */
-/*   double attract; */
-/*   double repel; */
-/*   double fOverR; */
-/*   double fx; */
-/*   double fy; */
-/*   double pEatCutoff = 4.0 * (pow(FORCE_CUTOFF, -12) - pow(FORCE_CUTOFF, -6)); */
-
-/*   temp_potential_energy = 0.0; */
-
-/*   checkWalls(); */
-
-/*   // Compute forces of interactions from Lennard-Jones potential. */
-/*   for (int i = 0; i < NUM_PARTICLES; i++) { */
-/*     for (int j = 0; j < i; j++) { */
-/*       dx = x[i] - x[j]; */
-/*       dx2 = dx * dx; */
-/*       // Make sure they're close enough to bother. */
-/*       if (dx2 < FORCE_CUTOFF2) { */
-/*         dy = y[i] - y[j]; */
-/*         dy2 = dy * dy; */
-/*         if (dy2 < FORCE_CUTOFF2) { */
-/*           rSquared = dx2 + dy2; */
-/*           if (rSquared < FORCE_CUTOFF2) { */
-/*             rSquaredInv = 1.0 / rSquared; */
-/*             attract = rSquaredInv * rSquaredInv * rSquaredInv; */
-/*             repel = attract * attract; */
-/*             temp_potential_energy += (4.0 * (repel - attract)) - pEatCutoff; */
-/*             fOverR = 24.0 * ((2.0 * repel) - attract) * rSquaredInv; */
-/*             fx = fOverR * dx; */
-/*             fy = fOverR * dy; */
-/*             ax[i] += fx; */
-/*             ay[i] += fy; */
-/*             ax[j] -= fx;  // Newton's 3rd law */
-/*             ay[j] -= fy; */
-/*           } */
-/*         } */
-/*       } */
-/*     } */
-/*   } */
-/* } */
-
-/* void initialize_measurements() { */
-/*   measurement_step = 0; */
-/*   temperature_sum = temperature_squared_sum = 0.0; */
-/*   pressure_sum = pressure_squared_sum = 0.0; */
-/*   potential_energy_sum = potential_energy_squared_sum = 0.0; */
-/* } */
-
-/* void measure_properties() { */
-/*   kinetic_energy = virial = 0.0; */
-/*   for (int p = 0; p < NUM_PARTICLES; p++) { */
-/*     kinetic_energy += 0.5 * (vx[p] * vx[p] + vy[p] * vy[p]); */
-/*     virial += x[p] * ax[p] + y[p] * ay[p]; */
-/*   } */
-/*     total_energy = kinetic_energy + potential_energy; */
-/*     temperature = kinetic_energy / NUM_PARTICLES; */
-
-/*     measurement_step++; */
-/*     temperature_sum += temperature; */
-/*     temperature_squared_sum += temperature * temperature; */
-/*     potential_energy_sum += potential_energy; */
-/*     potential_energy_squared_sum += potential_energy * potential_energy; */
-/* } */
-
-/* int particle_count() { */
-/*   return NUM_PARTICLES; */
-/* } */
-
 void print_config() {
   printf("\n Simulation Configuration:");
   printf("   Number of particles        : %d\n", NUM_PARTICLES);
@@ -529,26 +375,6 @@ void print_properties() {
          t, average_t, average_p, (kE + pE), kE, pE, steps_accomplished);
 }
 
-
-/* void print_properties() { */
-/*   double avg_temp, std_temp; */
-/*   double avg_pressure, std_pressure; */
-/*   double avg_potential_e, std_potential_e; */
-
-/*   avg_temp = temperature_sum / measurement_step; */
-/*   std_temp = temperature_squared_sum / measurement_step; */
-/*   std_temp = sqrt(std_temp - avg_temp * avg_temp); */
-/*   printf("Temperature = %f ± %f\n", avg_temp, std_temp); */
-
-/*   avg_potential_e = potential_energy_sum / measurement_step; */
-/*   std_potential_e = potential_energy_squared_sum / measurement_step; */
-/*   std_potential_e = sqrt(std_potential_e - avg_potential_e * avg_potential_e); */
-/*   printf("Potential Energy = %f\n", temp_potential_energy); */
-/*   printf("Potential Energy per particle = %f ± %f\n", */
-/*          avg_potential_e / NUM_PARTICLES, std_potential_e / NUM_PARTICLES); */
-/* } */
-
-//
 // Random number stuff.
 //
 // The algo_647_uniform function returns a random uniform deviate in
@@ -562,7 +388,6 @@ void print_properties() {
 // I have never seen the actual paper - it's behind a paywall - but the
 // FORTRAN version of the algorithm is easy enough to understand.
 
-//int32_t glbl_seed = rng_seed;
 static int rng_seed = 12345;
 
 /*
