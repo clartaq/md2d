@@ -201,7 +201,7 @@ void compute_accelerations() {
     }
   }
 
-  pressure = wall_force / (4 * BOX_WIDTH);
+  pressure = wall_force / (4.0 * BOX_WIDTH);
 
   // Next, compute interactions using the Lennard-Jones potential.
   for (i = 0; i < NUM_PARTICLES; i++) {
