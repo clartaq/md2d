@@ -373,7 +373,7 @@ public class md2d {
      * Print some pseudo random numbers. Just for debugging purposes.
      */
     static void printRandomNumbers() {
-        pr.println("\nRandom numbers from a unifor distribution");
+        pr.println("\nRandom numbers from a uniform distribution");
         for (int i = 0; i < 10; i++) {
             double rnu = algo647Uniform();
             pr.println("Uniform #" + i + ": " + rnu);
