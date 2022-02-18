@@ -350,7 +350,7 @@ void initialize_particles() {
 }
 
 void print_config() {
-  printf("\n Simulation Configuration:");
+  printf("\n Simulation Configuration:\n");
   printf("   Number of particles        : %d\n", NUM_PARTICLES);
   printf("   Cutoff radius              : %.2f\n", FORCE_CUTOFF);
   printf("   Target temperature         : %.3f\n", TARGET_TEMPERATURE);
