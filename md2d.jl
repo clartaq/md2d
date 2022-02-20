@@ -1,65 +1,264 @@
-"""
-# module crng
+#
+# The MIT License
+#
+# Copyright 2022 David D. Clark.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
 
-- Julia version: 1.6.2
-- Author: david
-- Date: 2021-07-23
-
-# References
-
-    Paul Bratley, Bennett Fox, Linus Schrage,
-    A Guide to Simulation,
-    Second Edition,
-    Springer, 1987,
-    ISBN: 0387964673,
-    LC: QA76.9.C65.B73.
-
-    Bennett Fox,
-    Algorithm 647:
-    Implementation and Relative Efficiency of Quasirandom
-    Sequence Generators,
-    ACM Transactions on Mathematical Software,
-    Volume 12, Number 4, December 1986, pages 362-376.
-
-    Pierre L'Ecuyer,
-    Random Number Generation,
-    in Handbook of Simulation,
-    edited by Jerry Banks,
-    Wiley, 1998,
-    ISBN: 0471134031,
-    LC: T57.62.H37.
-
-    Peter Lewis, Allen Goodman, James Miller,
-    A Pseudo-Random Number Generator for the System/360,
-    IBM Systems Journal,
-    Volume 8, Number 2, 1969, pages 136-143.
-
-# Examples
-
-```jldoctest
-julia>
-```
-"""
-###module md2d
-
-###module crng
+#
+# A molecular dymamics simulation of a two-dimensional Lennard-Jones fluid.
+#
+# Author: david
+#
 
 using Printf
+using StaticArrays
+
+const num_particles = 500
+const force_cutoff = 3.0
+const force_cutoff_2 = force_cutoff * force_cutoff
+const p_eat_cutoff = 4.0 * ((force_cutoff^ -12) - (force_cutoff^ -6))
+const target_temperature = 0.42
+const time_step = 0.020
+const dt_over_2 = 0.5 * time_step
+const dt_squared_over_2 = 0.5 * time_step * time_step
+const box_width = 100.0
+const box_width_minus_half = box_width - 0.5
+const box_height = 100.0
+const box_height_minus_half = box_height - 0.5
+const wall_stiffness = 50.0
+const equilibration_time = 100.0
+const steps_between_equil_rescaling = 10
+const production_time = 300.0
+const steps_per_printout = 50.0
+
+const x = @MVector zeros(num_particles)
+const y = @MVector zeros(num_particles)
+const vx = @MVector zeros(num_particles)
+const vy = @MVector zeros(num_particles)
+const ax = @MVector zeros(num_particles)
+const ay = @MVector zeros(num_particles)
+
+const t = Ref{Float64}(0.0)
+const steps_accomplished = Ref{Int64}(0)
+
+const v_sum_x = Ref{Float64}(0.0)
+const v_sum_y = Ref{Float64}(0.0)
+const k_e = Ref{Float64}(0.0)
+const p_e = Ref{Float64}(0.0)
+const current_t = Ref{Float64}(0.0)
+const total_t = Ref{Float64}(0.0)
+const average_t = Ref{Float64}(0.0)
+const pressure = Ref{Float64}(0.0)
+const total_p = Ref{Float64}(0.0)
+const average_p = Ref{Float64}(0.0)
+const sample_count = Ref{Int64}(0)
+
+@printf "typeof t = %s, typeof steps_accomplished = %s\n" typeof(t) typeof(steps_accomplished)
+@printf "type of x = %s\n" typeof(x)
 
 function main()
     @printf "md2d - MD simulation of a 2D argon gas Lennard-Jones system.\n"
     @printf "This version is written in Julia. Version: %s.\n" VERSION
 
-    @printf "\nEquilibration\n"
+    print_config()
+    initialize_particles()
 
+    @printf "\nEquilibration\n"
+    print_properties_header()
+    print_properties()
+    start = time_ns()
+    while (t[] < equilibration_time)
+        single_step()
+        steps_accomplished[] += 1
+        t[] += time_step
+        if ((steps_accomplished[] % steps_per_printout) == 0)
+            compute_properties()
+            print_properties()
+        end
+        if ((steps_accomplished[] % steps_between_equil_rescaling) == 0)
+            rescale_velocities()
+        end
+    end
+
+    reset_measurements()
+    rescale_velocities()
     @printf "\nProduction\n"
+    print_properties_header()
+    while (t[] < (equilibration_time + production_time))
+        single_step()
+        steps_accomplished[] += 1
+        t[] += time_step
+        if ((steps_accomplished[] % steps_per_printout) == 0)
+            compute_properties()
+            print_properties()
+        end
+    end
 
     print_random_numbers()
+
+    finish = time_ns()
+    @printf "start: %d, finish: %d\n" start finish
+    ns_elapsed = finish - start
+    @printf "ns_elapsed: %d\n" ns_elapsed
+    ms_elapsed = (finish - start) / 1000000
+    @printf "ms_elapsed: %d\n" ms_elapsed
+    elapsed = (finish - start) / 1000000000
+    @printf "Elapsed time: %.3f seconds, %.3f steps per second\n" elapsed (steps_accomplished[] / elapsed)
+end
+
+# Execute one time step using the Verlet algorithm.
+function single_step()
+    for i in eachindex(x)
+        # Update positions.
+        x[i] += (vx[i] * time_step) + (ax[i] * dt_squared_over_2)
+        y[i] += (vy[i] * time_step) + (ay[i] * dt_squared_over_2)
+        # Update velocities "halfway".
+        vx[i] += (ax[i] * dt_over_2)
+        vy[i] += (ay[i] * dt_over_2)
+    end
+    compute_accelerations()
+    for i in eachindex(x)
+        # Finish updating velocities using the new accelerations.
+        vx[i] += (ax[i] * dt_over_2)
+        vy[i] += (ay[i] *dt_over_2)
+    end
+end
+
+# Compute accelerations of the molecules from their current positions using
+# the Lennard-Jones potential.
+function compute_accelerations()
+end
+
+function reset_measurements()
+    total_t[] = 0.0
+    total_p[] = 0.0
+    sample_count[] = 0
+end
+
+function calculate_kinetic_energy()
+    ek = 0.0
+    for i in eachindex(vx)
+        ek += 0.5 * (vx[i] * vx[i] + vy[i] * vy[i])
+    end
+    return ek
+end
+
+function compute_properties()
+    sample_count[] += 1
+    k_e = calculate_kinetic_energy()
+    current_t[] = k_e / num_particles
+    total_t[] += current_t[]
+    average_t[] = total_t[] / sample_count[]
+    total_p[] += pressure[]
+    average_p[] = total_p[] / sample_count[]
+end
+
+function nudge(epsilon)
+    return (algo_647_uniform() - 0.5) * epsilon
+end
+
+function place_particles()
+    spacing = 1.3
+    half_spacing = spacing / 2.0
+    bwmhs = box_width - half_spacing
+    jitter = 0.1
+    x_pos = half_spacing
+    y_pos = box_height - half_spacing
+
+    for i in eachindex(x)
+        x[i] = x_pos + nudge(jitter)
+        y[i] = y_pos + nudge(jitter)
+        x_pos += spacing
+        if (x_pos > bwmhs)
+            x_pos = half_spacing
+            y_pos -= spacing
+        end
+    end
+end
+
+function rescale_velocities()
+    velocity_squared_sum = 0.0
+    for i in eachindex(vx)
+        velocity_squared_sum += vx[i] * vx[i] + vy[i] * vy[i]
+    end
+    scaling_factor = 2.0 * num_particles * target_temperature / velocity_squared_sum
+    scaling_factor = sqrt(scaling_factor)
+    for i in eachindex(vx)
+        vx[i] *= scaling_factor
+        vy[i] *= scaling_factor
+    end
+end
+
+function remove_drift()
+    for i in eachindex(x)
+        v_sum_x[] += vx[i]
+        v_sum_y[] += vy[i]
+    end
+    for i in eachindex(x)
+        vx[i] -= v_sum_x[] / num_particles
+        vy[i] -= v_sum_y[] / num_particles
+    end
+end
+
+function initialize_particles()
+    for i in eachindex(x)
+        x[i] = 0.0
+        y[i] = 0.0
+        vx[i] = gaussian_deviate_marsaglia() - 0.5
+        vy[i] = gaussian_deviate_marsaglia() - 0.5
+        ax[i] = 0.0
+        ay[i] = 0.0
+    end
+    place_particles()
+    rescale_velocities()
+    remove_drift()
 end
 
 #
 # Printing stuff.
 #
+
+function print_config()
+    @printf "\n Simulation Configuration:\n"
+    @printf "   Number of particles        : %d\n" num_particles
+    @printf "   Cutoff radius              : %.2f\n" force_cutoff
+    @printf "   Target temperature         : %.3f\n" target_temperature
+    @printf "   Integration step size      : %.3f\n" time_step
+    @printf "   Width of simulation area   : %.1f\n" box_width
+    @printf "   Height of simulation area  : %.1f\n" box_height
+    @printf "   Area of simulation         : %.1f\n" box_width * box_height
+    @printf "   Wall stiffness             : %.1f\n" wall_stiffness
+    @printf "   Equilibration time         : %.1f\n" equilibration_time
+    @printf "      Steps between rescaling : %d\n" steps_between_equil_rescaling
+    @printf "   Production time            : %.1f\n" production_time
+    @printf "   Steps per print out        : %d\n" steps_per_printout
+end
+
+function print_properties_header()
+    @printf "Time      Temp.   Pressure Tot. E.   Kin. E.   Pot. E.   Steps\n"
+end
+
+function print_properties()
+    @printf "%7.3f,  %5.3f,  %6.4f,  %7.2f,  %6.2f,  %8.2f,  %d\n" t[] average_t[] average_p[] (k_e[] + p_e[]) k_e[] p_e[] steps_accomplished[]
+end
 
 function print_random_numbers()
     @printf "\nRandom numbers from a uniform distribution.\n"
@@ -72,25 +271,27 @@ function print_random_numbers()
     end
 end
 
-## Random number stuff.
-##
-## The algo_647_uniform function returns a random uniform deviate in
-## the range [0, 1) calculated using the ACM algorithm 647 as
-## recorded at: http://calgo.acm.org.
-## The algorithm is from the paper "ALGORITHM 647: Implementation and
-## relative Efficiency of Quasirandom Sequence Generators" by Bennet L. Fox,
-## ACM Transactions on Mathematical Software (TOMS), Volume 12, No 4,
-## Dec 1986, pp. 362-376.
-##
-## I have never seen the actual paper - it's behind a paywall - but the
-## FORTRAN version of the algorithm is easy enough to understand.
+#
+# Random number stuff.
+#
+
+# The algo_647_uniform function returns a random uniform deviate in
+# the range [0, 1) calculated using the ACM algorithm 647 as
+# recorded at: http://calgo.acm.org.
+# The algorithm is from the paper "ALGORITHM 647: Implementation and
+# relative Efficiency of Quasirandom Sequence Generators" by Bennet L. Fox,
+# ACM Transactions on Mathematical Software (TOMS), Volume 12, No 4,
+# Dec 1986, pp. 362-376.
+#
+# I have never seen the actual paper - it's behind a paywall - but the
+# FORTRAN version of the algorithm is easy enough to understand.
 
 # Something to hold an mutable seed value for the random number generator.
 mutable struct seedType
     seed::Int32
 end
 
-# # Something to hold an mutable seed value for the random number generator.
+# Something to hold an mutable seed value for the random number generator.
 glbl_seed = seedType(12345)
 
 # Allow the seed to be set externally.
@@ -110,9 +311,9 @@ function algo_647_uniform()
     return glbl_seed.seed * 4.656612875e-10
 end
 
-## The following is an implementation of the Marsaglia polar
-## method for generating random standard normal deviates. See
-## https://en.wikipedia.org/wiki/Marsaglia_polar_method.
+# The following is an implementation of the Marsaglia polar
+# method for generating random standard normal deviates. See
+# https://en.wikipedia.org/wiki/Marsaglia_polar_method.
 
 mutable struct spareType
     has_spare::Bool
@@ -123,8 +324,6 @@ glbl_spare = spareType(false, 0.0)
 
 # Return a random standard normal deviate as a double.
 function gaussian_deviate_marsaglia()
- # static int has_spare = 0;
- # static double spare;
     fac = 0.0
     rsq = 0.0
     r1 = 0.0
