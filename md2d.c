@@ -188,7 +188,7 @@ void compute_accelerations() {
     }
 
     if (y[i] < 0.5) {
-      ay[i] = (WALL_STIFFNESS * (0.5 - y[i]));
+      ay[i] = WALL_STIFFNESS * (0.5 - y[i]);
       wall_force += ay[i];
       pE += 0.5 * WALL_STIFFNESS * (0.5 - y[i]) * (0.5 - y[i]);
     } else if (y[i] > BOX_HEIGHT_MINUS_HALF) {
