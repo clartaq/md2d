@@ -313,9 +313,6 @@ fn removeDrift() void {
         vx[i] -= v_sum_x / @intToFloat(f64, num_particles);
         vy[i] -= v_sum_y / @intToFloat(f64, num_particles);
     }
-    print("@intToFloat(f64, num_particles: {d}.\n", .{@intToFloat(f64, num_particles)});
-    print("v_sum_x: {d}\n", .{v_sum_x});
-    print("v_sum_y: {d}\n", .{v_sum_y});
 }
 
 /// Initialize particle positions, scale velocities to target temperature,
