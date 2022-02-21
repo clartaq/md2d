@@ -177,7 +177,7 @@ fn computeAccelerations() void {
         }
 
         if (y[i] < 0.5) {
-            ay[i] = (wall_stiffness * (0.5 - y[i]));
+            ay[i] = wall_stiffness * (0.5 - y[i]);
             wall_force += ay[i];
             p_e += 0.5 * wall_stiffness * (0.5 - y[i]) * (0.5 - y[i]);
         } else if (y[i] > box_height_minus_half) {
