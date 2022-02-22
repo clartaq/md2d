@@ -31,19 +31,20 @@
 using Printf
 using StaticArrays
 
+# Simulation parameters
 const num_particles = 500
 const force_cutoff = 3.0
 const force_cutoff_2 = force_cutoff * force_cutoff
-const p_eat_cutoff = 4.0 * ((force_cutoff^ -12) - (force_cutoff^ -6))
+const p_eat_cutoff = 4.0 * ((force_cutoff^-12) - (force_cutoff^-6))
 const target_temperature = 0.42
 const time_step = 0.020
 const dt_over_2 = 0.5 * time_step
 const dt_squared_over_2 = 0.5 * time_step * time_step
-const box_width = 100.0
+const box_width = 100.0 # In units of molecular diameter.
 const box_width_minus_half = box_width - 0.5
 const box_height = 100.0
 const box_height_minus_half = box_height - 0.5
-const wall_stiffness = 50.0
+const wall_stiffness = 50.0 # "Spring constant" for walls.
 const equilibration_time = 100.0
 const steps_between_equil_rescaling = 10
 const production_time = 300.0
@@ -71,20 +72,17 @@ const total_p = Ref{Float64}(0.0)
 const average_p = Ref{Float64}(0.0)
 const sample_count = Ref{Int64}(0)
 
-@printf "typeof t = %s, typeof steps_accomplished = %s\n" typeof(t) typeof(steps_accomplished)
-@printf "type of x = %s\n" typeof(x)
-
 function main()
     @printf "md2d - MD simulation of a 2D argon gas Lennard-Jones system.\n"
     @printf "This version is written in Julia. Version: %s.\n" VERSION
-
     print_config()
+
     initialize_particles()
 
     @printf "\nEquilibration\n"
     print_properties_header()
     print_properties()
-    start = time_ns()
+    start_ns = time_ns()
     while (t[] < equilibration_time)
         single_step()
         steps_accomplished[] += 1
@@ -112,19 +110,15 @@ function main()
         end
     end
 
-    print_random_numbers()
-
-    finish = time_ns()
-    @printf "start: %d, finish: %d\n" start finish
-    ns_elapsed = finish - start
-    @printf "ns_elapsed: %d\n" ns_elapsed
-    ms_elapsed = (finish - start) / 1000000
-    @printf "ms_elapsed: %d\n" ms_elapsed
-    elapsed = (finish - start) / 1000000000
-    @printf "Elapsed time: %.3f seconds, %.3f steps per second\n" elapsed (steps_accomplished[] / elapsed)
+    # Very crude calculation of steps per second. Includes print time.
+    finish_ns = time_ns()
+    elapsed_sec = (finish_ns - start_ns) / 1000000000
+    @printf "Elapsed time: %.3f seconds, %.3f steps per second\n" elapsed_sec (
+        steps_accomplished[] / elapsed_sec
+    )
 end
 
-# Execute one time step using the Verlet algorithm.
+"Execute one time step using the Verlet algorithm."
 function single_step()
     for i in eachindex(x)
         # Update positions.
@@ -138,22 +132,93 @@ function single_step()
     for i in eachindex(x)
         # Finish updating velocities using the new accelerations.
         vx[i] += (ax[i] * dt_over_2)
-        vy[i] += (ay[i] *dt_over_2)
+        vy[i] += (ay[i] * dt_over_2)
     end
 end
 
-# Compute accelerations of the molecules from their current positions using
-# the Lennard-Jones potential.
+"Compute accelerations of the molecules from their current positions using
+ the Lennard-Jones potential."
 function compute_accelerations()
+    p_e[] = 0.0
+    wall_force = 0.0
+
+    # First, check for bouncing against the walls.
+    for i in eachindex(x)
+        if (x[i] < 0.5)
+            ax[i] = wall_stiffness * (0.5 - x[i])
+            wall_force += ax[i]
+            p_e[] += 0.5 * wall_stiffness * (0.5 - x[i]) * (0.5 - x[i])
+        elseif (x[i] > box_width_minus_half)
+            ax[i] = wall_stiffness * (box_width_minus_half - x[i])
+            wall_force -= ax[i]
+            p_e[] +=
+                0.5 *
+                wall_stiffness *
+                (box_width_minus_half - x[i]) *
+                (box_width_minus_half - x[i])
+        else
+            ax[i] = 0.0
+        end
+
+        if (y[i] < 0.5)
+            ay[i] = wall_stiffness * (0.5 - y[i])
+            wall_force += ay[i]
+            p_e[] = 0.5 * wall_stiffness * (0.5 - y[i]) * (0.5 - y[i])
+        elseif (y[i] > box_height_minus_half)
+            ay[i] = wall_stiffness * (box_height_minus_half - y[i])
+            wall_force -= ay[i]
+            p_e[] +=
+                0.5 *
+                wall_stiffness *
+                (box_height_minus_half - y[i]) *
+                (box_height_minus_half - y[i])
+        else
+            ay[i] = 0.0
+        end
+    end
+
+    pressure[] = wall_force / (4.0 * box_width)
+
+    # Next, compute interactions using the Lennard-Jones potential.
+    for i in eachindex(x)
+        for j = firstindex(x):(i-1)
+            dx = x[i] - x[j]
+            dx2 = dx * dx
+            # Make sure the pair are close enough to bother.
+            if (dx2 < force_cutoff_2)
+                dy = y[i] - y[j]
+                dy2 = dy * dy
+                if (dy2 < force_cutoff_2)
+                    r_squared = dx2 + dy2
+                    if (r_squared < force_cutoff_2)
+                        r_squared_inv = 1.0 / r_squared
+                        attract = r_squared_inv * r_squared_inv * r_squared_inv
+                        repel = attract * attract
+                        p_e[] += (4.0 * (repel - attract)) - p_eat_cutoff
+                        f_over_r = 24.0 * ((2.0 * repel) - attract) * r_squared_inv
+                        fx = f_over_r * dx
+                        fy = f_over_r * dy
+                        # Add the force on to i's acceleration.
+                        ax[i] += fx
+                        ay[i] += fy
+                        ax[j] -= fx # Newton's 3rd law
+                        ay[j] -= fy
+                    end
+                end
+            end
+        end
+    end
 end
 
+"Reset accumulators and counters used for some measurements."
 function reset_measurements()
     total_t[] = 0.0
     total_p[] = 0.0
     sample_count[] = 0
 end
 
-function calculate_kinetic_energy()
+"Return the instantaneous kinetic energy."
+function calculate_kinetic_energy()::Float64
     ek = 0.0
     for i in eachindex(vx)
         ek += 0.5 * (vx[i] * vx[i] + vy[i] * vy[i])
@@ -161,25 +226,32 @@ function calculate_kinetic_energy()
     return ek
 end
 
+"Compute accumulated property values from sampled values."
 function compute_properties()
     sample_count[] += 1
-    k_e = calculate_kinetic_energy()
-    current_t[] = k_e / num_particles
+    k_e[] = calculate_kinetic_energy()
+    current_t[] = k_e[] / num_particles
     total_t[] += current_t[]
     average_t[] = total_t[] / sample_count[]
     total_p[] += pressure[]
     average_p[] = total_p[] / sample_count[]
 end
 
-function nudge(epsilon)
+"Return a small random number uniformly distributed around 0
+ with a maximum magnitude of epsilon."
+function nudge(epsilon)::Float64
     return (algo_647_uniform() - 0.5) * epsilon
 end
 
+"Place the particles in empty locactions of a grid on the simulation
+ box starting from the lower left. Applies a small amount of \"jitter\"
+ to break up the regularity of the layout a little. Does not check for
+ overflow of the grid (too many particles to fit)."
 function place_particles()
-    spacing = 1.3
+    spacing = 1.3 # Minimum space between particle centers.
     half_spacing = spacing / 2.0
     bwmhs = box_width - half_spacing
-    jitter = 0.1
+    jitter = 0.1 # Random amount to break up regularity.
     x_pos = half_spacing
     y_pos = box_height - half_spacing
 
@@ -194,6 +266,7 @@ function place_particles()
     end
 end
 
+"Re-scale the velocities to the target temperature."
 function rescale_velocities()
     velocity_squared_sum = 0.0
     for i in eachindex(vx)
@@ -207,6 +280,7 @@ function rescale_velocities()
     end
 end
 
+"Remove any net momentum from the system of particles."
 function remove_drift()
     for i in eachindex(x)
         v_sum_x[] += vx[i]
@@ -218,6 +292,8 @@ function remove_drift()
     end
 end
 
+"Initialize particle positions, scale velocities to target temperature,
+ and remove systematic drift."
 function initialize_particles()
     for i in eachindex(x)
         x[i] = 0.0
@@ -257,16 +333,17 @@ function print_properties_header()
 end
 
 function print_properties()
-    @printf "%7.3f,  %5.3f,  %6.4f,  %7.2f,  %6.2f,  %8.2f,  %d\n" t[] average_t[] average_p[] (k_e[] + p_e[]) k_e[] p_e[] steps_accomplished[]
+    total_e = k_e[] + p_e[]
+    @printf "%7.3f,  %5.3f,  %6.4f,  %7.2f,  %6.2f,  %8.2f,  %d\n" t[] average_t[] average_p[] total_e k_e[] p_e[] steps_accomplished[]
 end
 
 function print_random_numbers()
     @printf "\nRandom numbers from a uniform distribution.\n"
-    for i in 0:9
+    for i = 0:9
         @printf "Uniform #%i: %.17f\n" i algo_647_uniform()
     end
     @printf "\nRandom numbers from a normal distribution.\n"
-    for i in 0:9
+    for i = 0:9
         @printf "Normal #%i: %.17f\n" i gaussian_deviate_marsaglia()
     end
 end
@@ -294,14 +371,14 @@ end
 # Something to hold an mutable seed value for the random number generator.
 glbl_seed = seedType(12345)
 
-# Allow the seed to be set externally.
+"Allow the seed to be set externally."
 function algo_647_set_seed(new_seed)
     setproperty!(glbl_seed, :seed, new_seed)
 end
 
-# Return a random uniform deviate in the range 0 <= x < 1.0 as a Float64.
+"Return a random uniform deviate in the range 0 <= x < 1.0 as a Float64."
 function algo_647_uniform()
-    k = floor(glbl_seed.seed/127773)
+    k = floor(glbl_seed.seed / 127773)
     partial = 16807 * (glbl_seed.seed - k * 127773) - k * 2386
     if (partial < 0)
         setproperty!(glbl_seed, :seed, partial + typemax(Int32))
@@ -322,7 +399,7 @@ end
 
 glbl_spare = spareType(false, 0.0)
 
-# Return a random standard normal deviate as a double.
+"Return a random standard normal deviate as a double."
 function gaussian_deviate_marsaglia()
     fac = 0.0
     rsq = 0.0
@@ -332,11 +409,11 @@ function gaussian_deviate_marsaglia()
         setproperty!(glbl_spare, :has_spare, false)
         return glbl_spare.spare
     else
-       while true
-           r1 = 2.0*algo_647_uniform() - 1.0
-           r2 = 2.0*algo_647_uniform() - 1.0
-           rsq = r1 * r1 + r2 * r2
-           (rsq >= 1.0 || rsq == 0.0) || break
+        while true
+            r1 = 2.0 * algo_647_uniform() - 1.0
+            r2 = 2.0 * algo_647_uniform() - 1.0
+            rsq = r1 * r1 + r2 * r2
+            (rsq >= 1.0 || rsq == 0.0) || break
         end
         fac = sqrt(-2.0 * log(rsq) / rsq)
         setproperty!(glbl_spare, :spare, r1 * fac)
