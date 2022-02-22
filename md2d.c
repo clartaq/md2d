@@ -159,7 +159,7 @@ void single_step() {
   }
 }
 
-/**
+/*
  * Compute accelerations of the molecules from their current positions using
  * the Lennard-Jones potential.
  */
@@ -219,8 +219,7 @@ void compute_accelerations() {
             attract = rSquaredInv * rSquaredInv * rSquaredInv;
             repel = attract * attract;
             pE += (4.0 * (repel - attract)) - P_EAT_CUTOFF;
-            fOverR = 24.0 * ((2.0 * repel) - attract)
-              * rSquaredInv;
+            fOverR = 24.0 * ((2.0 * repel) - attract) * rSquaredInv;
             fx = fOverR * dx;
             fy = fOverR * dy;
             // Add the force on to i's acceleration.
@@ -235,7 +234,7 @@ void compute_accelerations() {
   }
 }
 
-/**
+/*
  * Reset accumulators and counters used for some measurements.
  */
 void reset_measurements() {
@@ -244,7 +243,7 @@ void reset_measurements() {
   sample_count = 0;
 }
 
-/**
+/*
  * Calculate the instantaneous kinetic energy.
  *
  * @return The instantaneous kinetic energy.
@@ -257,7 +256,7 @@ double calculate_kinetic_energy() {
   return ek;
 }
 
-/**
+/*
  * Compute accumulated property values from sampled values.
  */
 void compute_properties() {
@@ -303,6 +302,9 @@ void place_particles() {
   }
 }
 
+/*
+ * Re-scale the velocities to the target temperature.
+ */
 void rescale_velocities() {
   double scaling_factor;
   double velocity_squared_sum = 0.0;
