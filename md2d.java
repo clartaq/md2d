@@ -78,7 +78,7 @@ public class md2d {
 
     public static void main(String[] args) {
 
-        pr.println("Md2dj - MD simulation of a 2D argon gas Lennard-Jones system.");
+        pr.println("md2d - MD simulation of a 2D argon gas Lennard-Jones system.");
         pr.println("This version is written in Java and running version "
                    + System.getProperty("java.version") + ".");
         printConfig();

@@ -218,7 +218,7 @@ function reset_measurements()
 end
 
 "Return the instantaneous kinetic energy."
-function calculate_kinetic_energy()::Float64
+function calculate_kinetic_energy()
     ek = 0.0
     for i in eachindex(vx)
         ek += 0.5 * (vx[i] * vx[i] + vy[i] * vy[i])
@@ -241,7 +241,7 @@ const nudge_count = Ref{Int64}(0)
 
 "Return a small random number uniformly distributed around 0
  with a maximum magnitude of epsilon."
-function nudge(epsilon)::Float64
+function nudge(epsilon)
     return (algo_647_uniform() - 0.5) * epsilon
 end
 
