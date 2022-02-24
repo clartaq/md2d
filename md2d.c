@@ -70,6 +70,8 @@ double current_t, total_t, average_t = 0.0;
 double pressure, total_p, average_p = 0.0;
 int sample_count = 0;
 
+static int rng_seed = 12345;
+
 void print_config();
 void initialize_particles();
 void print_properties_header();
@@ -88,6 +90,7 @@ void measure_properties();
 void single_step();
 void rescale_velocities();
 void print_properties();
+void print_random_numbers();
 double algo_647_uniform();
 double gaussian_deviate_marsaglia();
 
@@ -273,6 +276,7 @@ void compute_properties() {
  * Return a small random number uniformly distributed around 0
  * with a maximum magnitude of epsilon.
  */
+static int nudge_count = 0;
 double nudge(double epsilon) {
   return (algo_647_uniform() - 0.5) * epsilon;
 }
@@ -377,6 +381,17 @@ void print_properties() {
          t, average_t, average_p, (kE + pE), kE, pE, steps_accomplished);
 }
 
+void print_random_numbers() {
+  printf("\nRandom numbers from a uniform distribution.\n");
+  for (int i = 0; i < 10; i++) {
+    printf("Uniform #%i: %.17f\n", i, algo_647_uniform());
+  }
+  printf("\nRandom numbers from a normal distribution.\n");
+  for (int i = 0; i < 10; i++) {
+    printf("Normal #%i: %.17f\n", i, gaussian_deviate_marsaglia());
+  }
+}
+
 // Random number stuff.
 //
 // The algo_647_uniform function returns a random uniform deviate in
@@ -389,8 +404,6 @@ void print_properties() {
 //
 // I have never seen the actual paper - it's behind a paywall - but the
 // FORTRAN version of the algorithm is easy enough to understand.
-
-static int rng_seed = 12345;
 
 /*
  * Return a random uniform deviate in the range 0 <= x < 1.0 as a double.
