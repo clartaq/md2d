@@ -237,6 +237,8 @@ function compute_properties()
     average_p[] = total_p[] / sample_count[]
 end
 
+const nudge_count = Ref{Int64}(0)
+
 "Return a small random number uniformly distributed around 0
  with a maximum magnitude of epsilon."
 function nudge(epsilon)::Float64
@@ -251,7 +253,7 @@ function place_particles()
     spacing = 1.3 # Minimum space between particle centers.
     half_spacing = spacing / 2.0
     bwmhs = box_width - half_spacing
-    jitter = 0.1 # Random amount to break up regularity.
+    jitter = 0.01 # Random amount to break up regularity.
     x_pos = half_spacing
     y_pos = box_height - half_spacing
 
@@ -337,6 +339,7 @@ function print_properties()
     @printf "%7.3f,  %5.3f,  %6.4f,  %7.2f,  %6.2f,  %8.2f,  %d\n" t[] average_t[] average_p[] total_e k_e[] p_e[] steps_accomplished[]
 end
 
+"Print some pseudo random numbers. Just for debugging purposes."
 function print_random_numbers()
     @printf "\nRandom numbers from a uniform distribution.\n"
     for i = 0:9
@@ -423,4 +426,3 @@ function gaussian_deviate_marsaglia()
 end
 
 main()
-###end of module
