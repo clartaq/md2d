@@ -119,7 +119,7 @@ public class md2d {
         // Very crude calculation of steps per second. Includes print time.
         Instant finish = Instant.now();
         double elapsed = Duration.between(start, finish).toMillis() / 1000.0;
-        pr.printf("Elapsed time: %.3f seconds, %.3f steps per second.\n",
+        pr.printf("Elapsed time: %.3f seconds, %.3f steps per second.%n",
                   elapsed, stepsAccomplished / elapsed);
         System.exit(0);
     }
@@ -328,8 +328,8 @@ public class md2d {
         for (int i = 0; i < NUM_PARTICLES; i++) {
             x[i] = 0.0;
             y[i] = 0.0;
-            vx[i] = gaussianDeviateMarsaglia() - 0.5; //Math.random() - 0.5;
-            vy[i] = gaussianDeviateMarsaglia() - 0.5; //Math.random() - 0.5;
+            vx[i] = gaussianDeviateMarsaglia() - 0.5;
+            vy[i] = gaussianDeviateMarsaglia() - 0.5;
             ax[i] = 0.0;
             ay[i] = 0.0;
         }
@@ -361,11 +361,11 @@ public class md2d {
     }
 
     static void printPropertiesHeader() {
-        pr.printf("Time      Temp.   Pressure Tot. E.   Kin. E.   Pot. E.   Steps\n");
+        pr.printf("Time      Temp.   Pressure Tot. E.   Kin. E.   Pot. E.   Steps%n");
     }
 
     static void printProperties() {
-        pr.printf("%7.3f,  %5.3f,  %6.4f,  %7.2f,  %6.2f,  %8.2f,  %d\n",
+        pr.printf("%7.3f,  %5.3f,  %6.4f,  %7.2f,  %6.2f,  %8.2f,  %d%n",
                   t, averageT, averageP, (kE + pE), kE, pE, stepsAccomplished);
     }
 
