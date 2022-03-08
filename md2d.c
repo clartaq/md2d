@@ -83,14 +83,9 @@ void rescale_velocities();
 void reset_measurements();
 double calculate_kinetic_energy();
 void print_random_numbers();
-void initialize();
-void compute_accelerations();
+void initialize_particles();
 void initialize_measurements();
 void measure_properties();
-void single_step();
-void rescale_velocities();
-void print_properties();
-void print_random_numbers();
 double algo_647_uniform();
 double gaussian_deviate_marsaglia();
 
