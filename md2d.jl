@@ -74,7 +74,7 @@ const sample_count = Ref{Int64}(0)
 
 function main()
     @printf "md2d - MD simulation of a 2D argon gas Lennard-Jones system.\n"
-    @printf "This version is written in Julia. Version: %s.\n" VERSION
+    @printf "This version is written in Julia and running version %s.\n" VERSION
     print_config()
 
     initialize_particles()

@@ -77,7 +77,7 @@ var sample_count: i32 = 0;
 
 pub fn main() void {
     print("md2d - MD simulation of a 2D argon gas Lennard-Jones system.\n", .{});
-    print("This version is written in Zig version: {}\n", .{builtin.zig_version});
+    print("This version is written in Zig and running version: {}\n", .{builtin.zig_version});
 
     printConfig();
 

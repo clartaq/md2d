@@ -93,7 +93,7 @@ int main() {
   P_EAT_CUTOFF = 4 * (pow(FORCE_CUTOFF, -12) - pow(FORCE_CUTOFF, -6));
 
   printf("md2d - MD simulation of a 2D argon gas Lennard-Jones system.\n");
-  printf("This version is written in C. Standard: %ld\n", __STDC_VERSION__);
+  printf("This version is written in C and comiled for Standard %ld\n", __STDC_VERSION__);
   print_config();
 
   initialize_particles();
