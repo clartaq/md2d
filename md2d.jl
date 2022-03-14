@@ -382,7 +382,7 @@ end
 "Return a random uniform deviate in the range 0 <= x < 1.0 as a Float64."
 function algo_647_uniform()
     k = floor(glbl_seed.seed / 127773)
-    partial = 16807 * (glbl_seed.seed - k * 127773) - k * 2386
+    partial = 16807 * (glbl_seed.seed - k * 127773) - k * 2836
     if (partial < 0)
         setproperty!(glbl_seed, :seed, partial + typemax(Int32))
     else

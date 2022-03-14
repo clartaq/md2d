@@ -398,7 +398,7 @@ const INT32_MAX: i32 = math.maxInt(i32);
 fn algo647Uniform() f64 {
     var k: i32 = @divFloor(glbl_seed, 127773);
     // var k: i32 = floor(glbl_seed / 127773);
-    var partial: i32 = 16807 * (glbl_seed - k * 127773) - k * 2386;
+    var partial: i32 = 16807 * (glbl_seed - k * 127773) - k * 2836;
     if (partial < 0) {
         glbl_seed = partial + INT32_MAX;
     } else {

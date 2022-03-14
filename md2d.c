@@ -405,7 +405,7 @@ void print_random_numbers() {
  */
 double algo_647_uniform() {
   int32_t k = floor(rng_seed/127773);
-  int32_t partial = 16807*(rng_seed - k*127773) - k*2386;
+  int32_t partial = 16807*(rng_seed - k*127773) - k*2836;
   if (partial < 0)
     rng_seed = partial + INT32_MAX;
   else

@@ -408,7 +408,7 @@ public class md2d {
      */
     static double algo647Uniform() {
         int k = Math.floorDiv(rngSeed, 127773);
-        int partial = 16807 * (rngSeed - k * 127773) - k * 2386;
+        int partial = 16807 * (rngSeed - k * 127773) - k * 2836;
         if (partial < 0) {
             rngSeed = partial + Integer.MAX_VALUE;
         } else {
