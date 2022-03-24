@@ -151,7 +151,7 @@ void single_step() {
   }
   compute_accelerations();
   for (int i = 0; i < NUM_PARTICLES; i++) {
-    // Finish updating velocities using the new accellerations.
+    // Finish updating velocities using the new accelerations.
     vx[i] += (ax[i] * DT_OVER_2);
     vy[i] += (ay[i] * DT_OVER_2);
   }
