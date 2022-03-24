@@ -9,7 +9,7 @@ The programs simulate a two dimensional argon gas where the gas atoms have
 a Lennard-Jones potential.
 
 The source files illustrate how to do the same simulation using four
-different languages: C, Java, Rust, and Julia.
+different languages: C, Java, Zig, and Julia.
 
 As mentioned, theses programs are about as simple as possible. There
 is no fancy graphical output, just print statements to display data to the
@@ -28,7 +28,18 @@ numbers, we want them to be identical among the different languages. With
 the versions provided here, we can generate the same sequence of random 
 numbers in each program, provided we start with the same seed value.
 
-## Tools
+## Tools and Development Environment
+
+All development was done on an Intel iMac Pro running macOS Monterey version 12.
+
+All program editing was done in Emacs 27.2 using plugins for the major modes for each language.
+
+### Java
+
+The prototype for the programs was first written in Java.
+### C
+### Zig
+### Julia
 
 - Java and JavaFX, obviously. I used OpenJDK Java version 17.0.2 and 
 OpenJFX JavaFX 17.0.2.
