@@ -52,9 +52,10 @@ public class md2d {
     static final double BOX_HEIGHT = 100.0;
     static final double BOX_HEIGHT_MINUS_HALF = BOX_HEIGHT - 0.5;
     static final double WALL_STIFFNESS = 50.0;  // "Spring constant" for walls.
-    static final double EQUILIBRATION_TIME = 100.0;
+    static final double EQUILIBRATION_TIME = 200.0;
     static final int STEPS_BETWEEN_EQUIL_RESCALING = 10;
-    static final double PRODUCTION_TIME = 300.0;
+    static final double PRODUCTION_TIME = 200.0;
+    static final int STEPS_BETWEEN_PROD_RESCALING = 100;
     static final int STEPS_PER_PRINTOUT = 50;
 
     // Other globals
@@ -113,6 +114,9 @@ public class md2d {
             if ((stepsAccomplished % STEPS_PER_PRINTOUT) == 0) {
                 computeProperties();
                 printProperties();
+            }
+            if ((stepsAccomplished % STEPS_BETWEEN_PROD_RESCALING) == 0) {
+                rescaleVelocities();
             }
         }
 
@@ -357,6 +361,7 @@ public class md2d {
         pr.println("   Equilibration time         : " + EQUILIBRATION_TIME);
         pr.println("      Steps between rescaling : " + STEPS_BETWEEN_EQUIL_RESCALING);
         pr.println("   Production time            : " + PRODUCTION_TIME);
+        pr.println("      Steps between rescaling : " + STEPS_BETWEEN_PROD_RESCALING);
         pr.println("   Steps per print out        : " + STEPS_PER_PRINTOUT);
     }
 

@@ -42,9 +42,10 @@
 (def box-height 100.0)
 (def box-height-minus-half (- box-height 0.5))
 (def wall-stiffness 50.0)
-(def equilibration-time 100)
+(def equilibration-time 200)
 (def steps-between-equil-rescaling 10)
-(def production-time 300.0)
+(def production-time 200.0)
+(def steps-between-prod-rescaling 100)
 (def steps-per-printout 50)
 
 # Other globals
@@ -121,7 +122,9 @@
     (set t (+ t time-step))
     (if (= 0 (% steps-accomplished steps-per-printout))
       (do (compute-properties)
-          (print-properties))))
+          (print-properties)))
+    (if (= 0 (% steps-accomplished steps-between-prod-rescaling))
+      (rescale-velocities)))
 
   # Very crude calculation of steps per second. Includes print time.
   (def elapsed-time (- (os/clock) start-time))
@@ -336,6 +339,7 @@ and remove systematic drift."
   (printf "   Equilibration time         : %.1f" equilibration-time)
   (printf "      Steps between rescaling : %d" steps-between-equil-rescaling)
   (printf "   Production time            : %.1f" production-time)
+  (printf "      Steps between rescaling : %d" steps-between-prod-rescaling)
   (printf "   Steps per printout         : %d" steps-per-printout))
 
 (varfn print-properties-header []

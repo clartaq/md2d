@@ -45,9 +45,10 @@
 (define box-height 100.0)
 (define box-height-minus-half (- box-height 0.5))
 (define wall-stiffness 50.0)
-(define equilibration-time 100.0)
+(define equilibration-time 200.0)
 (define steps-between-equil-rescaling 10)
-(define production-time 300.0)
+(define production-time 200.0)
+(define steps-between-prod-rescaling 100)
 (define steps-per-printout 50)
 
 ;; Global variables
@@ -147,7 +148,9 @@
       (inc! t time-step)
       (if (zero? (modulo steps-accomplished steps-per-printout))
           (begin (compute-properties)
-                 (print-properties))))
+                 (print-properties)))
+      (if (zero? (modulo steps-accomplished steps-between-prod-rescaling))
+          (rescale-velocities)))
 
     ;; Very crude calculation of steps per second. Includes print time.
     (set! elapsed-time (/ (- (cpu-time) start-time) 1000.0))
@@ -163,8 +166,8 @@
        (vector-inc! x i (+ (* (vector-ref vx i) time-step) (* (vector-ref ax i) dt-squared-over-2)))
        (vector-inc! y i (+ (* (vector-ref vy i) time-step) (* (vector-ref ay i) dt-squared-over-2)))
        ;; Update velocities "halfway".
-       (vector-set! vx i (+ (vector-ref vx i) (* (vector-ref ax i) dt-over-2)))
-       (vector-set! vy i (+ (vector-ref vy i) (* (vector-ref ay i) dt-over-2))))
+       (vector-inc! vx i (* (vector-ref ax i) dt-over-2))
+       (vector-inc! vy i (* (vector-ref ay i) dt-over-2)))
   (compute-accelerations)
   (for (i 0 num-particles)
        ;; Finish updating velocities using the new accelerations.
@@ -209,7 +212,7 @@ the Lennard-Jones potential."
              (begin
                (vector-set! ay i (* wall-stiffness (- box-height-minus-half yi)))
                (dec! wall-force (vector-ref ay i))
-               (inc! p-e (* wall-stiffness (- box-height-minus-half yi)
+               (inc! p-e (* 0.5 wall-stiffness (- box-height-minus-half yi)
                             (- box-height-minus-half yi))))]
 
             [else (vector-set! ay i 0.0)])))

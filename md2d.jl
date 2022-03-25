@@ -45,9 +45,10 @@ const box_width_minus_half = box_width - 0.5
 const box_height = 100.0
 const box_height_minus_half = box_height - 0.5
 const wall_stiffness = 50.0 # "Spring constant" for walls.
-const equilibration_time = 100.0
+const equilibration_time = 200.0
 const steps_between_equil_rescaling = 10
-const production_time = 300.0
+const production_time = 200.0
+const steps_between_prod_rescaling = 100
 const steps_per_printout = 50.0
 
 const x = @MVector zeros(num_particles)
@@ -107,6 +108,9 @@ function main()
         if ((steps_accomplished[] % steps_per_printout) == 0)
             compute_properties()
             print_properties()
+        end
+        if ((steps_accomplished[] % steps_between_prod_rescaling) == 0)
+            rescale_velocities()
         end
     end
 
@@ -327,6 +331,7 @@ function print_config()
     @printf "   Equilibration time         : %.1f\n" equilibration_time
     @printf "      Steps between rescaling : %d\n" steps_between_equil_rescaling
     @printf "   Production time            : %.1f\n" production_time
+    @printf "      Steps between rescaling : %d\n" steps_between_prod_rescaling
     @printf "   Steps per print out        : %d\n" steps_per_printout
 end
 

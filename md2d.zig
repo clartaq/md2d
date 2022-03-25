@@ -47,9 +47,10 @@ const box_width_minus_half: f64 = box_width - 0.5;
 const box_height: f64 = 100.0;
 const box_height_minus_half: f64 = box_height - 0.5;
 const wall_stiffness: f64 = 50.0;
-const equilibration_time: f64 = 100.0;
+const equilibration_time: f64 = 200.0;
 const steps_between_equil_rescaling: i32 = 10;
-const production_time: f64 = 300.0;
+const production_time: f64 = 200.0;
+const steps_between_prod_rescaling: i32 = 100;
 const steps_per_printout: i32 = 50;
 
 // Other globals.
@@ -113,6 +114,9 @@ pub fn main() void {
         if (@mod(steps_accomplished, steps_per_printout) == 0) {
             computeProperties();
             printProperties();
+        }
+        if (@mod(steps_accomplished, steps_between_prod_rescaling) == 0) {
+            rescaleVelocities();
         }
     }
 
@@ -353,6 +357,7 @@ fn printConfig() void {
     print("   Equilibration time         : {d}\n", .{equilibration_time});
     print("      Steps between rescaling : {d}\n", .{steps_between_equil_rescaling});
     print("   Production time            : {d}\n", .{production_time});
+    print("      Steps between rescaling : {d}\n", .{steps_between_prod_rescaling});
     print("   Steps per print out        : {d}\n", .{steps_per_printout});
 }
 

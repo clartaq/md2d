@@ -47,9 +47,10 @@ const double BOX_WIDTH_MINUS_HALF = BOX_WIDTH - 0.5;
 const double BOX_HEIGHT = 100.0;
 const double BOX_HEIGHT_MINUS_HALF = BOX_HEIGHT - 0.5;
 const double WALL_STIFFNESS = 50.0;  // "Spring constant" for walls.
-const double EQUILIBRATION_TIME = 100.0;
+const double EQUILIBRATION_TIME = 200.0;
 const int STEPS_BETWEEN_EQUIL_RESCALING = 10;
-const double PRODUCTION_TIME = 300.0;
+const double PRODUCTION_TIME = 200.0;
+const int STEPS_BETWEEN_PROD_RESCALING = 100;
 const int STEPS_PER_PRINTOUT = 50;
 
 double x[NUM_PARTICLES];
@@ -126,6 +127,9 @@ int main() {
     if ((steps_accomplished % STEPS_PER_PRINTOUT) == 0) {
       compute_properties();
       print_properties();
+    }
+    if ((steps_accomplished % STEPS_BETWEEN_PROD_RESCALING) == 0) {
+      rescale_velocities();
     }
   }
 
@@ -363,6 +367,7 @@ void print_config() {
   printf("   Equilibration time         : %.1f\n", EQUILIBRATION_TIME);
   printf("      Steps between rescaling : %d\n", STEPS_BETWEEN_EQUIL_RESCALING);
   printf("   Production time            : %.1f\n", PRODUCTION_TIME);
+  printf("      Steps between rescaling : %d\n", STEPS_BETWEEN_PROD_RESCALING);
   printf("   Steps per print out        : %d\n", STEPS_PER_PRINTOUT);
 }
 
