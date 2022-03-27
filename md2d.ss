@@ -321,7 +321,6 @@ overflow of the grid (too many particles to fiel)."
          (vector-set! vx i (* (vector-ref vx i) scaling-factor))
          (vector-set! vy i (* (vector-ref vy i) scaling-factor)))))
 
-
 (define (remove-drift)
   "Remove any net momentum from the system of particles."
   (for (i 0 num-particles)
@@ -357,7 +356,7 @@ and remove systematic drift."
   (newline))
 
 (define (print-config)
-  (printf "\n Simulation Configurations:~%")
+  (printf "\n Simulation Configuration :~%")
   (printf "    Number of particles        : ~a~%" num-particles)
   (printf "    Cutoff radius              : ~a~%" force-cutoff)
   (printf "    Target temperature         : ~a~%" target-temperature)
