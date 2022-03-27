@@ -356,7 +356,7 @@ and remove systematic drift."
   (newline))
 
 (define (print-config)
-  (printf "\n Simulation Configuration :~%")
+  (printf "\n Simulation Configuration:~%")
   (printf "    Number of particles        : ~a~%" num-particles)
   (printf "    Cutoff radius              : ~a~%" force-cutoff)
   (printf "    Target temperature         : ~a~%" target-temperature)
