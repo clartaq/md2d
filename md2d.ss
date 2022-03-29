@@ -368,6 +368,7 @@ and remove systematic drift."
   (printf "    Equilibration time         : ~a~%" equilibration-time)
   (printf "       Steps between rescaling : ~a~%" steps-between-equil-rescaling)
   (printf "    Production time            : ~a~%" production-time)
+  (printf "       Steps between rescaling : ~a~%" steps-between-prod-rescaling)
   (printf "    Steps per printout         : ~a~%" steps-per-printout))
 
 (define (print-properties-header)
