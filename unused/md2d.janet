@@ -128,7 +128,6 @@
 
   # Very crude calculation of steps per second. Includes print time.
   (def elapsed-time (- (os/clock) start-time))
-  # (print "elapsed-time: " elapsed-time)
   (printf "Elapsed time: %.3f seconds, %.3f steps per second."
           elapsed-time (/ steps-accomplished elapsed-time))
   (os/exit 0))
@@ -164,36 +163,36 @@ the Lennard-Jones potential."
   (for i 0 num-particles
     (var xi (get x i))
     (cond
-      (< xi 0.5) #(if (< xi 0.5)
+      (< xi 0.5)
       (do
         (put ax i (* wall-stiffness (- 0.5 xi)))
         (+= wall-force (get ax i))
         (+= p-e (* 0.5 wall-stiffness (- 0.5 xi) (- 0.5 xi))))
-      #else if
-      (> xi box-width-minus-half) #(if (> xi box-width-minus-half)
+
+      (> xi box-width-minus-half)
       (do
         (put ax i (* wall-stiffness (- box-width-minus-half xi)))
         (-= wall-force (get ax i))
         (+= p-e (* 0.5 wall-stiffness (- box-width-minus-half xi)
                    (- box-width-minus-half xi))))
-      # else
+
       (put ax i 0.0))
 
     (var yi (get y i))
     (cond
-      (< yi 0.5) #   (if (< yi 0.5)
+      (< yi 0.5)
       (do
         (put ay i (* wall-stiffness (- 0.5 yi)))
         (+= wall-force (get ay i))
         (+= p-e (* 0.5 wall-stiffness (- 0.5 yi) (- 0.5 yi))))
-      # else if
-      (> yi box-height-minus-half) #     (if (> yi box-height-minus-half)
+
+      (> yi box-height-minus-half)
       (do
         (put ay i (* wall-stiffness (- box-height-minus-half yi)))
         (-= wall-force (get ay i))
         (+= p-e (* 0.5 wall-stiffness (- box-height-minus-half  yi)
                    (- box-height-minus-half yi))))
-      #else
+
       (put ay i 0.0)))
 
   (set pressure (/ wall-force (* 4.0 box-width)))
