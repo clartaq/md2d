@@ -23,7 +23,7 @@
  */
 
 /*
- * A molecular dymamics simulation of a two-dimensional Lennard-Jones fluid.
+ * A molecular dynamics simulation of a two-dimensional Lennard-Jones fluid.
  *
  * Author: david
  */
