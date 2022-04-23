@@ -11,3 +11,8 @@ md2dc
 md2dz
 mc2d.zig
 md2dc.as.zig
+*.lps
+*.lpi
+*.o
+md2dp
+md2d
