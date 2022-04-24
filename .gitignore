@@ -16,3 +16,7 @@ md2dc.as.zig
 *.o
 md2dp
 md2d
+ppas.sh
+link*.res
+/lib/
+/backup/
