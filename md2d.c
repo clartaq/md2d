@@ -275,7 +275,6 @@ void compute_properties() {
  * Return a small random number uniformly distributed around 0
  * with a maximum magnitude of epsilon.
  */
-static int nudge_count = 0;
 double nudge(double epsilon) {
   return (algo_647_uniform() - 0.5) * epsilon;
 }
