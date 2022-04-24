@@ -1,6 +1,9 @@
 /zig-out/
 /zig-cache/
 /.idea/
+/lib/
+/backup/
+/unused/
 build.zig
 md2dc.orig
 *.class
@@ -18,5 +21,3 @@ md2dp
 md2d
 ppas.sh
 link*.res
-/lib/
-/backup/
