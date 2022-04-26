@@ -17,6 +17,7 @@ md2dc.as.zig
 *.lps
 *.lpi
 *.o
+*.lpr
 md2dp
 md2d
 ppas.sh
