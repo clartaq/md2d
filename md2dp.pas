@@ -40,7 +40,7 @@ const
   NUM_PARTICLES = 500;
   NPM1 = NUM_PARTICLES - 1;
   FORCE_CUTOFF = 3.0;
-  FORCE_CUTOFF2 = FORCE_CUTOFF * FORCE_CUTOFF;
+  FORCE_CUTOFF_2 = FORCE_CUTOFF * FORCE_CUTOFF;
   // Can't create constants from such complicated expressions in Pascal.
   // P_EAT_CUTOFF          = 4 * (power(FORCE_CUTOFF, -12) - power(FORCE_CUTOFF, -6));
   TARGET_TEMPERATURE = 0.42;
@@ -59,7 +59,7 @@ const
   STEPS_PER_PRINTOUT = 50;
 
 type
-  TMdArray = array[0..NPM1] of double; //(pred(NUM_PARTICLES))] of double;
+  TMdArray = array[0..NPM1] of double;
 
 var
   // The arrays of particle information.
@@ -81,6 +81,10 @@ var
   AveragePressure: double = 0.0;
 
   StartTime, StopTime: TDateTime;
+  hh, mm, ss, ms: word;
+  ElapsedSeconds: integer;
+  ElapsedAsDouble: double;
+  StepsPerSecond: double;
 
   function Algo647Uniform: double; forward;
   function GaussianDeviateMarsaglia: double; forward;
@@ -97,23 +101,105 @@ var
       x[i] := x[i] + (vx[i] * TIME_STEP) + (ax[i] * DT_SQUARED_OVER_2);
       y[i] := y[i] + (vy[i] * TIME_STEP) + (ay[i] * DT_SQUARED_OVER_2);
       // Update velocities "halfway".
-      vx[i] := vx[i] + ax[i] * DT_OVER_2;
-      vy[i] := vy[i] + ay[i] * DT_OVER_2;
+      vx[i] := vx[i] + (ax[i] * DT_OVER_2);
+      vy[i] := vy[i] + (ay[i] * DT_OVER_2);
     end;
-    // ComputeAccelerations
+    ComputeAccelerations;
     for i := 0 to NPM1 do
     begin
       // Finish updating velocities using the accelerations.
-      vx[i] := vx[i] + ax[i] * DT_OVER_2;
-      vy[i] := vy[i] + ay[i] * DT_OVER_2;
+      vx[i] := vx[i] + (ax[i] * DT_OVER_2);
+      vy[i] := vy[i] + (ay[i] * DT_OVER_2);
     end;
   end;
 
   // Compute accelerations of the molecules from their current positions using
   // the Lennard-Jones potential.
   procedure ComputeAccelerations;
+  var
+    i, j: integer;
+    dx, dy: double;
+    dx2, dy2, rSquared, rSquaredInv, attract, repel, fOverR, fx, fy: double;
+    WallForce: double = 0.0;
   begin
+    Pe := 0.0;
 
+    // First, check for bouncing against the walls.
+    for i := 0 to NPM1 do
+    begin
+      if x[i] < 0.5 then
+      begin
+        ax[i] := WALL_STIFFNESS * (0.5 - x[i]);
+        WallForce := WallForce + ax[i];
+        Pe := Pe + 0.5 * WALL_STIFFNESS * (0.5 - x[i]) * (0.5 - x[i]);
+      end
+      else if x[i] > BOX_WIDTH_MINUS_HALF then
+      begin
+        ax[i] := WALL_STIFFNESS * (BOX_WIDTH_MINUS_HALF - x[i]);
+        WallForce := WallForce - ax[i];
+        Pe := Pe + 0.5 * WALL_STIFFNESS * (BOX_WIDTH_MINUS_HALF - x[i]) *
+          (BOX_WIDTH_MINUS_HALF - x[i]);
+      end
+      else
+      begin
+        ax[i] := 0.0;
+      end;
+
+      if y[i] < 0.5 then
+      begin
+        ay[i] := WALL_STIFFNESS * (0.5 - y[i]);
+        WallForce := WallForce + ay[i];
+        Pe := Pe + 0.5 * WALL_STIFFNESS * (0.5 - y[i]) * (0.5 - y[i]);
+      end
+      else if y[i] > BOX_HEIGHT_MINUS_HALF then
+      begin
+        ay[i] := WALL_STIFFNESS * (BOX_HEIGHT_MINUS_HALF - y[i]);
+        WallForce := WallForce - ay[i];
+        Pe := Pe + 0.5 * WALL_STIFFNESS * (BOX_HEIGHT_MINUS_HALF - y[i]) *
+          (BOX_HEIGHT_MINUS_HALF - y[i]);
+      end
+      else
+      begin
+        ay[i] := 0.0;
+      end;
+    end;
+
+    pressure := WallForce / (4.0 * BOX_WIDTH);
+
+    // Next, compute interactions using the Lennard-Jones potential.
+    for i := 0 to NPM1 do
+    begin
+      for j := 0 to pred(i) do
+      begin
+        dx := x[i] - x[j];
+        dx2 := dx * dx;
+        // Make sure the pair are close enough to bother.
+        if dx2 < FORCE_CUTOFF_2 then
+        begin
+          dy := y[i] - y[j];
+          dy2 := dy * dy;
+          if dy2 < FORCE_CUTOFF_2 then
+          begin
+            rSquared := dx2 + dy2;
+            if rSquared < FORCE_CUTOFF_2 then
+            begin
+              rSquaredInv := 1.0 / rSquared;
+              attract := rSquaredInv * rSquaredInv * rSquaredInv;
+              repel := attract * attract;
+              Pe := Pe + (4.0 * (repel - attract)) - PEatCutoff;
+              fOverR := 24.0 * ((2.0 * repel) - attract) * rSquaredInv;
+              fx := fOverR * dx;
+              fy := fOverR * dy;
+              // Add the force on to i's acceleration.
+              ax[i] := ax[i] + fx;
+              ay[i] := ay[i] + fy;
+              ax[j] := ax[j] - fx; // Newton's 3rd law
+              ay[j] := ay[j] - fy;
+            end;
+          end;
+        end;
+      end;
+    end;
   end;
 
   // Reset accumulators and counters used for some measurements.
@@ -222,10 +308,9 @@ var
 
     for i := 0 to NPM1 do
     begin
-      vx[i] := vx[i] - VSumX / NUM_PARTICLES;
-      vy[i] := vy[i] - VSumY / NUM_PARTICLES;
+      vx[i] := vx[i] - (VSumX / NUM_PARTICLES);
+      vy[i] := vy[i] - (VSumY / NUM_PARTICLES);
     end;
-
   end;
 
   // Initialize particle positions, scale velocities to target temperature,
@@ -234,7 +319,7 @@ var
   var
     i: integer;
   begin
-    for i := 0 to NPM1 do //pred(NUM_PARTICLES) do
+    for i := 0 to NPM1 do
     begin
       x[i] := 0.0;
       y[i] := 0.0;
@@ -243,11 +328,9 @@ var
       ax[i] := 0.0;
       ay[i] := 0.0;
     end;
-
     PlaceParticles;
     RescaleVelocities;
     RemoveDrift;
-
   end;
 
   procedure PrintConfig;
@@ -373,7 +456,7 @@ begin // main program
   writeln('This version is written in Pascal and running version ');
   printConfig;
 
-  PrintRandomNumbers;
+  InitializeParticles;
 
   writeln;
   writeln('Equilibration');
@@ -396,6 +479,8 @@ begin // main program
     end;
   end;
 
+  ResetMeasurements;
+  RescaleVelocities;
   writeln;
   writeln('Production');
   PrintPropertiesHeader;
@@ -404,9 +489,25 @@ begin // main program
     SingleStep;
     Inc(StepsAccomplished);
     Time := Time + TIME_STEP;
+    if (StepsAccomplished mod STEPS_PER_PRINTOUT) = 0 then
+    begin
+      ComputeProperties;
+      PrintProperties;
+    end;
+    if (StepsAccomplished mod STEPS_BETWEEN_PROD_RESCALING) = 0 then
+    begin
+      RescaleVelocities;
+    end;
   end;
 
   // Very crude calculation of steps per second. Includes print time.
   StopTime := now;
-  writeln(FormatDateTime('hh.nn.ss.zzz', StopTime - StartTime), ' time taken');
+  DecodeTime(StopTime - StartTime, hh, mm, ss, ms);
+  ElapsedSeconds := ss + 60 * mm + 60 * 60 * hh;
+  ElapsedAsDouble := ElapsedSeconds + (ms / 1000.0);
+  StepsPerSecond := StepsAccomplished / ElapsedAsDouble;
+  writeln;
+  writeln(format('Elapsed time: %.3f seconds, %.0n steps per second.',
+    [ElapsedAsDouble, StepsPerSecond]));
 end.
+
