@@ -29,7 +29,10 @@
 ;;
 
 (import
- (scheme))
+ (scheme)
+ (only (chezscheme)
+       machine-type
+       scheme-version-number))
 
 ;; Simulation parameters
 (define num-particles 500)
@@ -115,11 +118,29 @@
 	 steps ...
 	 (loop (+ var 1)))))))
 
+(define (this-scheme-implementation-name)
+  (let* ((machine-type-name (symbol->string (machine-type)))
+         (threads (if (char=? (string-ref machine-type-name 0) #\t)
+                      "m"
+                      "s"))
+         (bits (if (char=? (string-ref machine-type-name (if (string=? threads "m") 2 1)) #\6)
+                   "64"
+                   "32")))
+    (string-append "chez-" (call-with-values scheme-version-number
+                             (lambda (a b c)
+                               (string-append (number->string a)
+                                              "."
+                                              (number->string b)
+                                              "."
+                                              (number->string c))))
+                   "-" threads bits)))
+
 (define (main)
   (let ([start-time 0]
         [elapsed-time 0.0])
     (println "md2d - MD simulation of a 2D argon gas Lennard-Jones system.")
-    (println "This version is written in Scheme and running Chez Scheme.")
+    (println "This version is written in Scheme and running "
+             (this-scheme-implementation-name))
     (print-config)
 
     (initialize-particles)
