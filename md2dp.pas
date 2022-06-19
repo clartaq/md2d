@@ -509,7 +509,5 @@ begin // main program
   writeln;
   writeln(format('Elapsed time: %.3f seconds, %.0n steps per second.',
     [ElapsedAsDouble, StepsPerSecond]));
-end;
-
 end.
 
