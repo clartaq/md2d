@@ -1,3 +1,7 @@
+program md2dnew (output);
+
+// A molecular dynamics  simulation of a Lennard-Jones fluid.
+
 {
 The MIT License
 
@@ -22,15 +26,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 }
 
-program md2dp;
-
-// A molecular dynamics  simulation of a Lennard-Jones fluid.
-
 {$mode objfpc}{$H+}
 
 uses {$IFDEF UNIX}
   Cthreads, {$ENDIF}
   Classes,
+  Crt,
   Math,
   SysUtils;
 
@@ -453,7 +454,9 @@ begin // main program
   PEatCutoff := 4 * (power(FORCE_CUTOFF, -12) - power(FORCE_CUTOFF, -6));
 
   writeln('md2d - MD simulation of 2D argon gas Lennard-Jones system.');
-  writeln('This version is written in Pascal and running version ');
+  write('This version is written in Pascal and running FPC version ');
+  {$macro on}
+  writeln(FPC_VERSION, '.', FPC_RELEASE, '.', FPC_PATCH, '.');
   printConfig;
 
   InitializeParticles;
@@ -510,4 +513,3 @@ begin // main program
   writeln(format('Elapsed time: %.3f seconds, %.0n steps per second.',
     [ElapsedAsDouble, StepsPerSecond]));
 end.
-
