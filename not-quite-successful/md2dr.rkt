@@ -30,7 +30,10 @@
 ;; Author: david
 ;;
 
-(import (rnrs (6)))
+(import (rnrs)
+        (only (racket base) current-inexact-milliseconds require version))
+
+(require srfi/48)
 
 ;; Simulation parameters
 (define num-particles 500)
@@ -120,7 +123,7 @@
   (let ([start-time 0]
         [elapsed-time 0.0])
     (println "md2d - MD simulation of a 2D argon gas Lennard-Jones system.")
-    (println "This version is written in Scheme and running Racket !#r6rs Scheme.")
+    (println "This version is written in Scheme and running Racket " (version) " !#r6rs Scheme.")
     (print-config)
 
     (initialize-particles)
@@ -129,6 +132,7 @@
     (print-properties-header)
     (print-properties)
     ;;    (set! start-time (cpu-time))
+    (set! start-time (current-inexact-milliseconds))
     (while (< t equilibration-time)
            (single-step)
            (inc! steps-accomplished)
@@ -154,10 +158,9 @@
                (rescale-velocities)))
 
     ;; Very crude calculation of steps per second. Includes print time.
-    ;;    (set! elapsed-time (/ (- (cpu-time) start-time) 1000.0))
-    ;;    (println "Elapsed time: " elapsed-time)
-    ;;    (printf "Elapsed time: ~,3f seconds, ~,3f steps per second.~%"
-    ;;            elapsed-time (/ steps-accomplished elapsed-time))
+    (set! elapsed-time (/ (- (current-inexact-milliseconds) start-time) 1000.0))
+    (println  (format "Elapsed time: ~5,3F seconds, ~5,3F steps per second."
+                      elapsed-time (/ steps-accomplished elapsed-time)))
     (exit 0)))
 
 (define (single-step)
