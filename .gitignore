@@ -3,6 +3,8 @@
 /.idea/
 /lib/
 /backup/
+/not-quite-successful/lib/
+/not-quite-successful/backup/
 build.zig
 md2dc.orig
 *.class
