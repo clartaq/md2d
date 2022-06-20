@@ -140,10 +140,11 @@ The Pascal version is written in the [Free Pascal](https://www.freepascal.org)
 variant of the language, which is similar to
 [Delphi](https://www.embarcadero.com/products/Delphi). Free Pascal has a nice
 IDE associated with it called [Lazarus](https://www.lazarus-ide.org). I just
-can't run the program from the IDE for some reason.
+can't run the program from the IDE for some reason. It compiles fine but
+the output does not show up on any console.
 
 The Pascal version can be compiled to an executable by typing
-`fpc md2dp` at the command line. Then, run it like normal with `./md2dp`.
+`fpc md2dp.lpr` at the command line. Then, run it like normal with `./md2dp`.
 
 ### Racket
 
