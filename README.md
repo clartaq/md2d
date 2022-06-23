@@ -4,19 +4,18 @@
 particles interacting _via_ the Lennard-Jones potential.
 
 The calculations are illustrated
-by writing versions of the simulation in five different languages.
+by writing versions of the simulation in six different languages.
 
 ## Description
 
-The source files in this directory contain programs to run just about the
+The source files in this directory contain programs to run about the
 simplest molecular dynamics simulation possible that generates meaningful
 property calculations.
 The programs simulate a two dimensional argon gas where the gas atoms have
 a Lennard-Jones potential.
 
 The source files illustrate how to do the same simulation using six
-different languages: C, Java, Julia, Scheme, and Zig. (There are also
-versions of the program written in the Janet, Pascal, and Racket languages,
+different languages: C, Java, Julia, Racket, Scheme, and Zig. (There are versions of the program written in the Janet and (Free) Pascal languages,
 but they are unfinished and do not produce the same results as the other
 programs.)
 
@@ -28,17 +27,24 @@ MD code in a more modern language than FORTRAN.
 Zig and Julia are newer languages that look like good
 candidates for these types of calculation-intensive programs.
 
-Scheme is a Lisp dialect. Lisps are not often considered for the types of
-calculations used in molecular dynamics, but, with some contortion, can be
+Racket and Scheme are members of the Lisp language family. Lisps are not often considered for the types of
+calculations used in molecular dynamics, but, with contortion, can be
 molded for use.
 
+## What Do These Programs Do?
+
+The programs all calculate the trajectories of 500 disks (2D soft particles) over a period of 400 time steps. The particles interact with each other via a Lennard-Jones potential.
+
+At the beginning of the simulation, the particles are placed in the simulation space in a rectangular array with a little random "jitter" in their locations. The particles are given random velocities for which the entire group has a given mean temperature.
+
 As mentioned, theses programs are about as simple as possible. There
-is no fancy graphical output, just print statements to display data to the
-terminal.
+is no fancy graphical output, just print statements to display data to the terminal.
+
+Periodically, the temperature, pressure, total energy, kinetic energy, and potential energy of the system are all calculated and displayed on the terminal. The simulation goes through an "equilibrium" phase where the temperature of the system is reset every few steps. That phase is followed by a "production" phase in which the system evolves with less frequent temperature rescaling.
 
 ## Installation
 
-Just copy or clone the repository into a convenient directory. Then`cd` into
+Copy or clone the repository into a convenient directory. Then`cd` into
 that directory to begin work with the repository.
 
 ## Tools and Development Environment
@@ -91,9 +97,17 @@ write high performance software.
 
 To run the Julia program, type `julia md2d.jl`.
 
+### Racket
+
+[Racket](https://racket-lang.org) 8.5 was used for development in that language. The Racket program is a slightly modified version of the Scheme version. DrRacket, a graphical IDE, was used for modification, testing, and debugging for the Racket version of the program.
+
+The program, `md2dr.rkt` can be loaded into DrRacket and run directly or the IDE can be used to create a standalone executable, which is much faster that running the program in the IDE.
+
+To run the standalone executable, type `md2dr` at the command line.
+
 ### Scheme
 
-Chez Scheme 9.5.6 was used to develop the Scheme version of the program.
+[Chez Scheme](https://scheme.com) 9.5.6 was used to develop the Scheme version of the program.
 
 The Scheme version can be run by typing `chez --program md2d.ss` at
 the command line.
@@ -109,8 +123,8 @@ the command line.
 
 ## Some Not Entirely Successful Versions
 
-The directory `not-quite-successful` contains implementations in three
-additional languages: Janet, Pascal, and Racket.
+The directory `not-quite-successful` contains implementations in two
+additional languages: Janet and Pascal.
 
 All versions of the program run to completion. The Janet and Pascal
 versions produce results similar to the other versions, just not
@@ -119,11 +133,9 @@ close to each other. I assume there is some numeric configuration
 that I have not figured out that will bring them into agreement
 with the other programs.
 
-The Racket version produces the expected results. It just isn't complete.
-
 ### Janet
 
-Janet is a young and interesting version of Lisp. It takes many ideas for
+[Janet](https://janet-lang.org) is a young and interesting version of Lisp. It takes many ideas for
 a modern Lisp from [Clojure](https://clojure.org).
 A version of the program written in this language
 is included in the repository, but it is incomplete and does not match
@@ -132,7 +144,7 @@ the output of the other programs.
 Janet version 1.20.1 was used to write a version of the program in that
 language.
 
-The Janet version cab be run by typing `janet -l ./md2d` at the command line.
+The Janet version can be run by typing `janet -l ./md2d` at the command line.
 
 ### Pascal
 
@@ -145,16 +157,6 @@ the output does not show up on any console.
 
 The Pascal version can be compiled to an executable by typing
 `fpc md2dp.lpr` at the command line. Then, run it like normal with `./md2dp`.
-
-### Racket
-
-[Racket](https://racket-lang.org) is a Lisp derivative most like Scheme. But
-it is much more.
-
-The best way to run the Racket version is to load the file in to
-[DrRacket](https://docs.racket-lang.org/drracket/index.html) and execute
-it from the IDE. DrRacket can also be used to
-create an executable file that can be run directly from the command line.
 
 ## Credits
 
