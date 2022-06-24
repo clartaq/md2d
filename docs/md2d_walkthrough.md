@@ -1,5 +1,7 @@
 # md2d Walkthrough
 
+**This is WIP! NOT NEARLY COMPLETE, PROBABLY NOT ACCURATE.**
+
 The following is a short description of how the programs are structured. All
 versions have a similar structure.
 
