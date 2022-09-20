@@ -15,7 +15,8 @@ The programs simulate a two dimensional argon gas where the gas atoms have
 a Lennard-Jones potential.
 
 The source files illustrate how to do the same simulation using six
-different languages: C, Java, Julia, Racket, Scheme, and Zig. (There are versions of the program written in the Janet and (Free) Pascal languages,
+different languages: C, Java, Julia, Racket, Scheme, and Zig. (There are 
+versions of the program written in the Janet and (Free) Pascal languages,
 but they are unfinished and do not produce the same results as the other
 programs.)
 
@@ -99,15 +100,38 @@ To run the Julia program, type `julia md2d.jl`.
 
 ### Racket
 
-[Racket](https://racket-lang.org) 8.5 was used for development in that language. The Racket program is a slightly modified version of the Scheme version. DrRacket, a graphical IDE, was used for modification, testing, and debugging for the Racket version of the program.
+[Racket](https://racket-lang.org) 8.6 was used for development in that language. The Racket program
+is a slightly modified version of the Scheme version. DrRacket, a graphical 
+IDE, was used for modification, testing, and debugging for the Racket version 
+of the program.
 
-The program, `md2dr.rkt` can be loaded into DrRacket and run directly or the IDE can be used to create a standalone executable, which is much faster that running the program in the IDE.
+The program, `md2dr.rkt` can be loaded into DrRacket and run directly or the 
+IDE can be used to create a standalone executable, which is much faster that 
+running the program in the IDE.
 
 To run the standalone executable, type `md2dr` at the command line.
+
+Because I like Scheme so much, there is another version written for Racket
+that follows the [R7RS](https://small.r7rs.org/attachment/r7rs.pdf) standard for the language.
+
+This is accomplished by using an additional library, [racket-r7rs](https://github.com/lexi-lambda/racket-r7rs), to
+add the necessary features to Racket. Follow the instructions at the repository
+to install the library.
+
+After installing the library, the R7RS version can be run from the command
+line with:
+
+```
+racket -I r7rs -f md2d7.scm
+```
+
+(I also examined using several different native R7RS implementations but was
+disappointed in their performance, level of compliance, or something else.)
 
 ### Scheme
 
 [Chez Scheme](https://scheme.com) 9.5.6 was used to develop the Scheme version of the program.
+This version follows the R6RS version of the standard.
 
 The Scheme version can be run by typing `chez --program md2d.ss` at
 the command line.
