@@ -31,15 +31,14 @@
 ;; Author: david
 ;;
 
-(import (scheme base)
+(import (only (racket base) version) ;; For `version` procedure.
+        (scheme base)
         (scheme inexact)
         (scheme load)
         (scheme process-context)
-        (scheme r5rs)
         (scheme time)
         (scheme write)
-        (srfi 166 base)
-        )
+        (srfi 48))
 
 ;; Simulation parameters
 (define num-particles 500)
@@ -84,7 +83,7 @@
 (define sample-count 0)
 
 ;; Give Scheme some more imperative incrementing, decrementing and looping
-;; functionality C.
+;; functionality like C.
 
 ;; Scalar mutating increment and decrement since Scheme doesn't normally have
 ;; these for some reason. The two argument versions are somewhat like += and -=.
@@ -110,12 +109,6 @@
     ((_ v i) (vector-inc! v i -1))
     ((_ v i n) (vector-inc! v i (- n)))))
 
-;; Some looping macros that look like the C equivalents.
-(define-syntax while
-  (syntax-rules ()
-    ((_ pred steps ...)
-     (let loop () (when pred steps ... (loop))))))
-
 (define-syntax for
   (syntax-rules ()
     ((for (var first past step) body ...)
@@ -132,51 +125,46 @@
 (define (run-sim)
   (let ((start-time 0)
         (elapsed-time 0.0))
-    (println "md2d - MD simulation of a 2D argon gas Lennard-Jones system.")
-    (println "This version is written in R7RS (Chibi) Scheme.")
+    (md2d-println "md2d - MD simulation of a 2D argon gas Lennard-Jones system.")
+    (md2d-println "This version is written in R7RS Scheme (Racket "
+             (version) " with R7RS library).")
     (print-config)
 
     (initialize-particles)
 
-    (println "\nEquilibration")
+    (md2d-println "\nEquilibration")
     (print-properties-header)
     (print-properties)
     (set! start-time (current-jiffy))
-    (while (< t equilibration-time)
-      (single-step)
-      (inc! steps-accomplished)
-      (inc! t time-step)
-      (if (zero? (modulo steps-accomplished steps-per-printout))
-          (begin (compute-properties)
-                 (print-properties)))
-      (if (zero? (modulo steps-accomplished steps-between-equil-rescaling))
-          (rescale-velocities)))
+    (run-steps equilibration-time steps-between-equil-rescaling)
 
     (reset-measurements)
     (rescale-velocities)
-    (println "\nProduction")
+    (md2d-println "\nProduction")
     (print-properties-header)
-    (while (< t (+ equilibration-time production-time))
+    (run-steps (+ equilibration-time production-time) steps-between-prod-rescaling)
+
+    ;; Very crude calculation of steps per second. Includes print time.
+    (set! elapsed-time ;;(exact->inexact
+          (* 1.0 (/ (- (current-jiffy) start-time)
+                    (jiffies-per-second))))
+    (display (format "Elapsed time: ~0,3F seconds, ~0,3F steps per second.~%"
+                     elapsed-time (/ steps-accomplished elapsed-time)))
+    (exit 0)))
+
+(define (run-steps end-time steps-between-rescale)
+  "Run steps common to equilbration and production."
+  (let loop ()
+    (when (< t end-time)
       (single-step)
       (inc! steps-accomplished)
       (inc! t time-step)
-      (if (zero? (modulo steps-accomplished steps-per-printout))
-          (begin (compute-properties)
-                 (print-properties)))
-      (if (zero? (modulo steps-accomplished steps-between-prod-rescaling))
-          (rescale-velocities)))
-
-    ;; Very crude calculation of steps per second. Includes print time.
-    (set! elapsed-time (exact->inexact
-                        (/ (- (current-jiffy) start-time)
-                           (jiffies-per-second))))
-    (display (show #f "Elapsed time: "
-                   (with ((precision 3)) (numeric elapsed-time))
-                   " seconds, "
-                   (with ((precision 2))
-                     (numeric (/ steps-accomplished elapsed-time)))
-                   " steps per second." nl))
-    (exit 0)))
+      (when (zero? (modulo steps-accomplished steps-per-printout))
+        (compute-properties)
+        (print-properties))
+      (when (zero? (modulo steps-accomplished steps-between-rescale))
+        (rescale-velocities))
+      (loop))))
 
 (define (single-step)
   "Execute one time step using the Verlet algorithm."
@@ -369,14 +357,26 @@ and remove systematic drift."
 ;;; Printing Stuff
 ;;;
 
-;; Display a series of arguments followed by a newline.
-(define (println . args)
+;; Display a series of arguments followed by a newline. Need to
+;; change name to avoid interference with Racket's built-in of
+;; the same name.
+(define (md2d-println . args)
   (for-each display args)
   (newline))
 
+;; A crummy procedure to right pad a string. Do not emulate.
+(define (string-pad-to s n)
+  "Right pad a string with spaced to the specified width."
+  (let loop ((my-str s))
+    (if (< (string-length my-str) n)
+        (loop (string-append my-str " "))
+        my-str)))
+
 ;; Format a parameter name and value uniformly.
 (define (display-parameter txt num)
-  (display (show #f (space-to 4) txt (space-to 31) ": " (numeric num) nl)))
+  (let ((base-str (string-pad-to (string-append "   " txt) 31)))
+    (display (string-append base-str ": " (number->string num)))
+    (newline)))
 
 (define (print-config)
   (display "\n Simulation Configuration:\n")
@@ -395,34 +395,19 @@ and remove systematic drift."
   (display-parameter "Steps per printout" steps-per-printout))
 
 (define (print-properties-header)
-  (println "Time      Temp.   Pressure Tot. E.   Kin. E.   Pot. E.   Steps"))
+  (md2d-println "Time      Temp.   Pressure Tot. E.   Kin. E.   Pot. E.   Steps"))
 
 (define (print-properties)
-  (let ((column-spacer ",  "))
-    (display
-     (show
-      #f
-      (padded 7 (with ((precision 3)) (numeric t)))
-      column-spacer
-      (padded 5 (with ((precision 3)) (numeric average-T)))
-      column-spacer
-      (padded 6 (with ((precision 4)) (numeric average-P)))
-      column-spacer
-      (padded 7 (with ((precision 2)) (numeric (+ k-e p-e))))
-      column-spacer
-      (padded 6 (with ((precision 2)) (numeric k-e)))
-      column-spacer
-      (padded 8 (with ((precision 2)) (numeric p-e)))
-      column-spacer
-      (numeric steps-accomplished) nl))))
+  (display (format "~7,3F,  ~5,3F,  ~6,4F,  ~7,2F,  ~6,2F,  ~8,2F,  ~a~%"
+                   t average-T average-P (+ k-e p-e) k-e p-e steps-accomplished)))
 
 (define (print-random-numbers)
-  (println "\nRandom numbers from a uniform distribution.")
+  (md2d-println "\nRandom numbers from a uniform distribution.")
   (for (n 0 10)
-       (println "Uniform #" n ": " (algo-647-uniform)))
-  (println "\nRandom numbers from a normal distribution.")
+       (md2d-println "Uniform #" n ": " (algo-647-uniform)))
+  (md2d-println "\nRandom numbers from a normal distribution.")
   (for (n 0 10)
-       (println "Normal #" n ": " (gaussian-deviate-marsaglia))))
+       (md2d-println "Normal #" n ": " (gaussian-deviate-marsaglia))))
 
 ;;;
 ;;; Random number stuff
