@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2022 David D. Clark.
+ * Copyright 2022, 2023 David D. Clark.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -84,6 +84,10 @@ public class md2d {
                    + System.getProperty("java.version") + ".");
         printConfig();
 
+//        System.out.println("P_EAT_CUTOFF: " + P_EAT_CUTOFF);
+//        printRandomNumbers();
+//        System.exit(0);
+//        
         initializeParticles();
 
         pr.println("\nEquilibration");
